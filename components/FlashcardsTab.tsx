@@ -72,37 +72,36 @@ const FlashcardsTab: React.FC<FlashcardsTabProps> = ({ flashcards }) => {
       <div className="flex flex-col items-center space-y-8">
         {/* Flashcard */}
         <div className="relative w-full max-w-4xl">
-          <div className="bg-gradient-to-br from-pink-100 via-orange-50 to-red-100 border-2 border-pink-200 rounded-3xl p-8 shadow-lg min-h-[280px] flex flex-col justify-between">
-            {/* Time indicator */}
-
-            {/* Summary content */}
-            <div className="flex-1 flex items-center justify-center perspective-1000">
-              <div 
-                onClick={handleCardFlip}
-                className={`relative w-full h-64 transition-transform duration-500 [transform-style:preserve-3d] cursor-pointer ${
-                  isFlipped ? '[transform:rotateY(180deg)]' : ''
-                }`}
-              >
-                {/* Front side */}
-                <div className="absolute inset-0 flex items-center justify-center [backface-visibility:hidden]">
+          <div className="[perspective:1000px]">
+            <div
+              onClick={handleCardFlip}
+              className={`bg-gradient-to-br from-pink-100 via-orange-50 to-red-100 border-2 border-pink-200 rounded-3xl p-8 shadow-lg min-h-[280px] flex flex-col justify-between transition-transform duration-500 [transform-style:preserve-3d] cursor-pointer ${
+                isFlipped ? '[transform:rotateY(180deg)]' : ''
+              }`}
+            >
+              {/* Front side - Question */}
+              <div className="[backface-visibility:hidden]">
+                <div className="flex-1 flex items-center justify-center min-h-[200px]">
                   <p className="text-lg text-gray-800 leading-relaxed text-center max-w-3xl">
-                    {mockFlashCards[currentCard].question}
-                  </p>
-                </div>
-                
-                {/* Back side */}
-                <div className="absolute inset-0 flex items-center justify-center [transform:rotateY(180deg)] [backface-visibility:hidden]">
-                  <p className="text-lg text-gray-800 leading-relaxed text-center max-w-3xl">
-                    {mockFlashCards[currentCard].answer}
+                    {!isFlipped && mockFlashCards[currentCard].question}
                   </p>
                 </div>
               </div>
-            </div>
+              
+              {/* Back side - Answer */}
+              <div className="absolute inset-0 [transform:rotateY(180deg)] [backface-visibility:hidden] bg-gradient-to-br from-pink-100 via-orange-50 to-red-100 border-2 border-pink-200 rounded-3xl p-8 flex flex-col justify-between">
+                <div className="flex-1 flex items-center justify-center min-h-[200px]">
+                  <p className="text-lg text-gray-800 leading-relaxed text-center max-w-3xl">
+                    {isFlipped && mockFlashCards[currentCard].answer}
+                  </p>
+                </div>
+              </div>
 
-            {/* Card number indicator */}
-            <div className="text-center">
-              <div className="text-sm text-gray-500">
-              {currentCard + 1} of {mockFlashCards.length}
+              {/* Card number indicator */}
+              <div className="text-center mt-4">
+                <div className="text-sm text-gray-500">
+                  {currentCard + 1} of {mockFlashCards.length}
+                </div>
               </div>
             </div>
           </div>
@@ -111,7 +110,11 @@ const FlashcardsTab: React.FC<FlashcardsTabProps> = ({ flashcards }) => {
         {/* Navigation */}
         <div className="flex items-center gap-6">
           <Button
-            onClick={prevCard}
+            onClick={() => {
+              const newCard = (currentCard - 1 + mockFlashCards.length) % mockFlashCards.length;
+              setCurrentCard(newCard);
+              setIsFlipped(false);
+            }}
             variant="outline"
             size="sm"
             className="rounded-full px-6 py-3 cursor-pointer"
@@ -125,7 +128,10 @@ const FlashcardsTab: React.FC<FlashcardsTabProps> = ({ flashcards }) => {
             {mockFlashCards.map((_, index) => (
               <button
                 key={index}
-                onClick={() => setCurrentCard(index)}
+                onClick={() => {
+                  setCurrentCard(index);
+                  setIsFlipped(false);
+                }}
                 className={`w-3 h-3 rounded-full transition-all duration-200 ${
                   index === currentCard
                     ? 'bg-gradient-to-r from-pink-500 to-orange-500 scale-125'
@@ -136,7 +142,11 @@ const FlashcardsTab: React.FC<FlashcardsTabProps> = ({ flashcards }) => {
           </div>
 
           <Button
-            onClick={nextCard}
+            onClick={() => {
+              const newCard = (currentCard + 1) % mockFlashCards.length;
+              setCurrentCard(newCard);
+              setIsFlipped(false);
+            }}
             variant="outline"
             size="sm"
             className="rounded-full px-6 py-3 cursor-pointer"
