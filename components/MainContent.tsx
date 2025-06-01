@@ -32,6 +32,14 @@ interface VideoData {
 interface HistorySummary {
   _id: string;
   videoUrl: string;
+  videoData?: {
+    title: string;
+    thumbnail: string;
+    duration: string;
+    views: string;
+    publishedAt: string;
+    channelName: string;
+  };
   timestamp: string;
   summary: string[];
   flashcards: Array<{ question: string, answer: string }>;
@@ -52,7 +60,6 @@ const MainContent: React.FC<MainContentProps> = ({ onBackToLanding, user, onLogo
 
   const handleURLSubmit = async (url: string) => {
     setVideoUrl(url);
-    console.log('Submitted URL:', url);
     setIsLoading(true);
     setShowHistory(false);
     
@@ -69,7 +76,6 @@ const MainContent: React.FC<MainContentProps> = ({ onBackToLanding, user, onLogo
       });
     
       const data = await response.json();
-      console.log('API Response:', data);
       if (response.ok) {
         setVideoData(data);
         setHasResults(true);
@@ -131,17 +137,24 @@ const MainContent: React.FC<MainContentProps> = ({ onBackToLanding, user, onLogo
   };
 
   const handleSelectHistoryItem = (item: HistorySummary) => {
-    // Extract video title from URL or use a placeholder
-    const videoTitle = `Video from ${new Date(item.createdAt).toLocaleDateString()}`;
-    
+    // Handle backward compatibility for summaries without videoData
+    const videoData = item.videoData || {
+      title: `Video from ${new Date(item.createdAt).toLocaleDateString()}`,
+      thumbnail: '',
+      duration: 'N/A',
+      views: 'N/A',
+      publishedAt: 'N/A',
+      channelName: 'Unknown Channel'
+    };
+
     setVideoData({
       url: item.videoUrl,
-      title: videoTitle,
-      thumbnail: '',
-      duration: '',
-      views: '',
-      publishedAt: '',
-      channelName: '',
+      title: videoData.title,
+      thumbnail: videoData.thumbnail,
+      duration: videoData.duration,
+      views: videoData.views,
+      publishedAt: videoData.publishedAt,
+      channelName: videoData.channelName,
       summary: item.summary,
       flashcards: item.flashcards,
       tldr: item.tldr,
@@ -239,33 +252,79 @@ const MainContent: React.FC<MainContentProps> = ({ onBackToLanding, user, onLogo
               </div>
             ) : (
               <div className="space-y-4">
-                {history.map((item) => (
-                  <div
-                    key={item._id}
-                    onClick={() => handleSelectHistoryItem(item)}
-                    className="cursor-pointer p-4 bg-white/70 backdrop-blur-sm rounded-2xl border border-pink-100 hover:shadow-lg transition-all duration-300 hover:border-pink-200"
-                  >
-                    <div className="flex items-start justify-between">
-                      <div className="flex-1">
-                        <div className="text-sm text-gray-500 mb-1">
-                          {new Date(item.createdAt).toLocaleDateString()} at {new Date(item.createdAt).toLocaleTimeString()}
+                {history.map((item) => {
+                  // Handle backward compatibility for summaries without videoData
+                  const videoData = item.videoData || {
+                    title: `Video from ${new Date(item.createdAt).toLocaleDateString()}`,
+                    thumbnail: '',
+                    duration: 'N/A',
+                    views: 'N/A',
+                    publishedAt: 'N/A',
+                    channelName: 'Unknown Channel'
+                  };
+
+                  return (
+                    <div
+                      key={item._id}
+                      onClick={() => handleSelectHistoryItem(item)}
+                      className="cursor-pointer p-4 bg-white/70 backdrop-blur-sm rounded-2xl border border-pink-100 hover:shadow-lg transition-all duration-300 hover:border-pink-200"
+                    >
+                      <div className="flex items-start gap-4">
+                        {/* Video Thumbnail */}
+                        <div className="flex-shrink-0">
+                          <img
+                            src={videoData.thumbnail || `https://img.youtube.com/vi/${item.videoUrl.split('v=')[1]}/hqdefault.jpg`}
+                            alt={videoData.title}
+                            className="w-32 h-20 object-cover rounded-lg shadow-sm"
+                            onError={(e) => {
+                              e.currentTarget.src = `https://img.youtube.com/vi/${item.videoUrl.split('v=')[1]}/hqdefault.jpg`;
+                            }}
+                          />
+                          <div className="text-xs text-center text-gray-500 mt-1">
+                            {videoData.duration}
+                          </div>
                         </div>
-                        <div className="text-sm text-blue-600 hover:text-blue-800 mb-2 break-all">
-                          {item.videoUrl}
+                        
+                        {/* Video Details */}
+                        <div className="flex-1">
+                          <div className="text-sm text-gray-500 mb-1">
+                            {new Date(item.createdAt).toLocaleDateString()} at {new Date(item.createdAt).toLocaleTimeString()}
+                          </div>
+                          
+                          <h3 className="text-lg font-semibold text-gray-800 mb-2 line-clamp-2">
+                            {videoData.title}
+                          </h3>
+                          
+                          <div className="text-sm text-pink-600 font-medium mb-2">
+                            {videoData.channelName}
+                          </div>
+                          
+                          <div className="flex items-center gap-4 text-xs text-gray-500 mb-2">
+                            <span>{videoData.views} views</span>
+                            <span>{videoData.publishedAt}</span>
+                          </div>
+                          
+                          <div className="text-gray-700">
+                            <div className="text-sm font-medium mb-1">Summary Preview:</div>
+                            <div className="text-sm text-gray-600 line-clamp-2">
+                              {item.summary.slice(0, 2).join(' ')}...
+                            </div>
+                          </div>
                         </div>
-                        <div className="text-gray-700">
-                          <div className="text-sm font-medium mb-1">Summary Preview:</div>
-                          <div className="text-sm text-gray-600 line-clamp-2">
-                            {item.summary.slice(0, 2).join(' ')}...
+                        
+                        {/* Stats */}
+                        <div className="flex-shrink-0 text-center">
+                          <div className="text-xs text-gray-400">
+                            {item.flashcards.length} flashcards
+                          </div>
+                          <div className="text-xs text-gray-400 mt-1">
+                            {item.tldr.length} TLDR points
                           </div>
                         </div>
                       </div>
-                      <div className="text-xs text-gray-400 ml-4">
-                        {item.flashcards.length} flashcards
-                      </div>
                     </div>
-                  </div>
-                ))}
+                  );
+                })}
               </div>
             )}
           </div>

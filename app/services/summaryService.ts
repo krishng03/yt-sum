@@ -1,9 +1,11 @@
 import { connectToDatabase } from '../../lib/mongodb';
 import SummaryData from '../models/Summary';
+import { IVideoData } from '../models/Summary';
 
 export async function saveSummary(summaryData: {
   userid: number;
   videoUrl: string;
+  videoData: IVideoData;
   timestamp: Date;
   summary: string[];
   flashcards: any[];
@@ -16,6 +18,7 @@ export async function saveSummary(summaryData: {
     const newSummary = new SummaryData({
       userid: summaryData.userid,
       videoUrl: summaryData.videoUrl,
+      videoData: summaryData.videoData,
       timestamp: summaryData.timestamp,
       summary: summaryData.summary,
       flashcards: summaryData.flashcards,
@@ -23,8 +26,7 @@ export async function saveSummary(summaryData: {
       lang: summaryData.lang
     });
 
-    const savedSummary = await newSummary.save();
-    return savedSummary;
+    return await newSummary.save();
   } catch (error) {
     console.error('❌ Error saving summary:', error);
     throw error;

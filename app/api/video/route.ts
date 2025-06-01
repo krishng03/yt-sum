@@ -130,15 +130,26 @@ export async function POST(request: Request) {
       
       if (currentUser && currentUser.userid) {
         try {
+          const videoData = {
+            title: video.snippet?.title || '',
+            thumbnail: video.snippet?.thumbnails?.standard?.url || '',
+            duration: formatDuration(video.contentDetails?.duration || ''),
+            views: formatViews(video.statistics?.viewCount || '0'),
+            publishedAt: formatPublishedAt(video.snippet?.publishedAt || ''),
+            channelName: video.snippet?.channelTitle || ''
+          };
+
           const summaryPayload = {
             userid: currentUser.userid,
             videoUrl: url,
+            videoData: videoData,
             timestamp: new Date(),
             summary: aiResponse.summary,
             flashcards: aiResponse.flashcards,
             tldr: aiResponse.tldr,
             lang: language
           };
+
           await saveSummary(summaryPayload as any);
           savedToDB = true;
           console.log(`✅ Summary saved successfully for user ${currentUser.userid}`);
