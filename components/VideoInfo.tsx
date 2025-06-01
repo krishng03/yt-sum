@@ -1,6 +1,5 @@
-
 import React from 'react';
-import { IconClock, IconEye, IconCalendar } from '@tabler/icons-react';
+import { IconClock, IconEye, IconCalendar, IconCheck, IconX, IconInfoCircle } from '@tabler/icons-react';
 
 interface VideoInfoProps {
   title: string;
@@ -10,6 +9,8 @@ interface VideoInfoProps {
   publishedAt: string;
   channelName: string;
   url: string;
+  savedToDB?: boolean;
+  isUserLoggedIn?: boolean;
 }
 
 const VideoInfo: React.FC<VideoInfoProps> = ({
@@ -19,7 +20,9 @@ const VideoInfo: React.FC<VideoInfoProps> = ({
   views,
   publishedAt,
   channelName,
-  url
+  url,
+  savedToDB,
+  isUserLoggedIn
 }) => {
   return (
     <div className="bg-white/80 backdrop-blur-sm border border-pink-100 rounded-3xl p-8 shadow-lg animate-fade-in">
@@ -60,6 +63,30 @@ const VideoInfo: React.FC<VideoInfoProps> = ({
               <span>{duration}</span>
             </div>
           </div>
+
+          {/* Save Status Indicator */}
+          {isUserLoggedIn !== undefined && (
+            <div className="mt-4">
+              {isUserLoggedIn ? (
+                savedToDB ? (
+                  <div className="flex items-center gap-2 text-green-600 bg-green-50 px-3 py-2 rounded-lg border border-green-200">
+                    <IconCheck className="w-4 h-4" />
+                    <span className="text-sm font-medium">Saved to your account</span>
+                  </div>
+                ) : (
+                  <div className="flex items-center gap-2 text-red-600 bg-red-50 px-3 py-2 rounded-lg border border-red-200">
+                    <IconX className="w-4 h-4" />
+                    <span className="text-sm font-medium">Failed to save to account</span>
+                  </div>
+                )
+              ) : (
+                <div className="flex items-center gap-2 text-blue-600 bg-blue-50 px-3 py-2 rounded-lg border border-blue-200">
+                  <IconInfoCircle className="w-4 h-4" />
+                  <span className="text-sm font-medium">Login to save summaries to your account</span>
+                </div>
+              )}
+            </div>
+          )}
         </div>
       </div>
     </div>

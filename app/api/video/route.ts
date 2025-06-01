@@ -1,6 +1,8 @@
 import { NextResponse } from 'next/server';
 import { google } from 'googleapis';
 import { GoogleGenerativeAI } from '@google/generative-ai';
+import { saveSummary } from '../../services/summaryService';
+import { getCurrentUser } from '../../../lib/auth';
 
 // --------------- DO NOT TOUCH ---------------
 // make .env file in root directory, add YOUTUBE_API_KEY and GEMINI_API_KEY as key-value pairs
@@ -68,6 +70,9 @@ export async function POST(request: Request) {
       throw new Error('Gemini API key is not configured');
     }
 
+    // Get current user if logged in
+    const currentUser = await getCurrentUser();
+
     const { url, language = 'en' } = await request.json();
 
     const videoId = extractVideoId(url);
@@ -114,11 +119,39 @@ export async function POST(request: Request) {
         aiResponse = JSON.parse(generatedText);
       } catch (e) {
         console.error('Failed to parse Gemini response:', e);
-        console.log('Raw Gemini response:', generatedText);
         aiResponse = {
           summary: "Failed to generate summary",
           flashcards: []
         };
+      }
+
+      // Save to MongoDB only if user is logged in
+      let savedToDB = false;
+      
+      if (currentUser && currentUser.userid) {
+        try {
+          const summaryPayload = {
+            userid: currentUser.userid,
+            videoUrl: url,
+            timestamp: new Date(),
+            summary: aiResponse.summary,
+            flashcards: aiResponse.flashcards,
+            tldr: aiResponse.tldr,
+            lang: language
+          };
+          await saveSummary(summaryPayload as any);
+          savedToDB = true;
+          console.log(`✅ Summary saved successfully for user ${currentUser.userid}`);
+        } catch (error) {
+          console.error('❌ Error saving summary to database:', error);
+          // Don't throw error, just continue without saving
+        }
+      } else {
+        console.log('❌ Summary not saved - user not logged in or invalid userid:', {
+          hasCurrentUser: !!currentUser,
+          userid: currentUser?.userid,
+          reason: !currentUser ? 'No current user' : !currentUser.userid ? 'No userid' : 'Unknown'
+        });
       }
 
       // Prepare response object
@@ -132,14 +165,16 @@ export async function POST(request: Request) {
         channelName: video.snippet?.channelTitle,
         summary: aiResponse.summary,
         flashcards: aiResponse.flashcards,
-        tldr: aiResponse.tldr
+        tldr: aiResponse.tldr,
+        savedToDB: savedToDB,
+        isUserLoggedIn: !!currentUser && !!currentUser.userid
       };
 
       return NextResponse.json(videoInfo);
 
     } catch (error) {
       console.error('Error in API calls:', error);
-      throw error; // Re-throw to be caught by outer try-catch
+      throw error;
     }
 
   } catch (error: any) {

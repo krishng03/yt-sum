@@ -105,11 +105,11 @@ const URLInput: React.FC<URLInputProps> = ({
 
                 <Select.Viewport className="p-1">
                   {[
-                    { label: 'English', value: 'en' },
-                    { label: 'हिन्दी (Hindi)', value: 'hi' },
+                    { label: 'English', value: 'english' },
+                    { label: 'हिन्दी (Hindi)', value: 'hindi' },
                     { label: 'ಕನ್ನಡ (Kannada)', value: 'kannada' },
-                    { label: 'Español (Spanish)', value: 'es' },
-                    { label: 'Français (French)', value: 'fr' },
+                    { label: 'Español (Spanish)', value: 'spanish' },
+                    { label: 'Français (French)', value: 'french' },
                   ].map((option) => (
                     <Select.Item
                       key={option.value}
