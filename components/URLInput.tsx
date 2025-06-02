@@ -30,7 +30,7 @@ const URLInput: React.FC<URLInputProps> = ({
   return (
     <div className="w-full max-w-3xl mx-auto bg-white/80 rounded-2xl p-8 shadow-lg border-2 border-pink-200">
       <div className="text-center mb-8 flex flex-col items-center">
-        <div className="relative">
+        <div className="relative mb-4">
           <div className="p-4 rounded-3xl bg-gradient-to-r from-pink-500 via-orange-500 to-red-500 shadow-lg">
             <IconBrandYoutube className="w-6 h-6 text-white" />
           </div>

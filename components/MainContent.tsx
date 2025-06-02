@@ -7,6 +7,7 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import SummaryTab from '@/components/SummaryTab';
 import FlashcardsTab from '@/components/FlashcardsTab';
 import { Button } from '@/components/ui/button';
+import StudyTab from '@/components/StudyTab';
 
 interface MainContentProps {
   onBackToLanding: () => void;
@@ -27,6 +28,7 @@ interface VideoData {
   tldr: string[];
   savedToDB?: boolean;
   isUserLoggedIn?: boolean;
+  notes?: string;
 }
 
 interface HistorySummary {
@@ -39,6 +41,7 @@ interface HistorySummary {
     views: string;
     publishedAt: string;
     channelName: string;
+    notes?: string;
   };
   timestamp: string;
   summary: string[];
@@ -62,19 +65,19 @@ const MainContent: React.FC<MainContentProps> = ({ onBackToLanding, user, onLogo
     setVideoUrl(url);
     setIsLoading(true);
     setShowHistory(false);
-    
+
     try {
       const response = await fetch('/api/video', {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
         },
-        body: JSON.stringify({ 
+        body: JSON.stringify({
           url: url,
           language: language
         })
       });
-    
+
       const data = await response.json();
       if (response.ok) {
         setVideoData(data);
@@ -112,12 +115,12 @@ const MainContent: React.FC<MainContentProps> = ({ onBackToLanding, user, onLogo
 
   const fetchHistory = async () => {
     if (!user || !user.userid) return; // Don't fetch for guests or invalid users
-    
+
     setIsLoadingHistory(true);
     try {
       const response = await fetch('/api/history');
       const data = await response.json();
-      
+
       if (response.ok) {
         setHistory(data.summaries);
       } else {
@@ -159,7 +162,8 @@ const MainContent: React.FC<MainContentProps> = ({ onBackToLanding, user, onLogo
       flashcards: item.flashcards,
       tldr: item.tldr,
       savedToDB: true, // History items are already saved
-      isUserLoggedIn: !!user && !!user.userid
+      isUserLoggedIn: !!user && !!user.userid,
+      notes: videoData.notes
     });
     setHasResults(true);
     setShowHistory(false);
@@ -169,21 +173,16 @@ const MainContent: React.FC<MainContentProps> = ({ onBackToLanding, user, onLogo
     <div className="min-h-screen bg-gradient-to-br from-pink-50 via-orange-50 to-red-50">
       <div className="container mx-auto px-4 py-8">
         {/* Header */}
-        <div className="flex items-center justify-between mb-8">
-          <Button
-            onClick={onBackToLanding}
-            variant="ghost"
-            className="cursor-pointer flex items-center gap-2 text-gray-600 hover:text-gray-800"
-          >
-            <IconArrowLeft className="w-4 h-4" />
-            Back to Home
-          </Button>
-          
-          <div className="flex items-center gap-2">
-            <div className="p-2 rounded-lg bg-gradient-to-br from-pink-500 to-red-500">
-              <IconBrandYoutube className="w-6 h-6 text-white" />
-            </div>
-            <h1 className="text-2xl font-bold bg-gradient-to-br from-pink-500 to-red-500 bg-clip-text text-transparent">YouTube Summarizer</h1>
+        <div className="flex items-center justify-between mb-8 px-12">
+          <div>
+            <Button
+              onClick={onBackToLanding}
+              variant="ghost"
+              className="cursor-pointer flex items-center gap-2 text-gray-600 hover:text-gray-800"
+            >
+              <IconArrowLeft className="w-4 h-4" />
+              Back to Home
+            </Button>
           </div>
 
           {/* User Section */}
@@ -194,7 +193,7 @@ const MainContent: React.FC<MainContentProps> = ({ onBackToLanding, user, onLogo
                   <IconUser className="w-4 h-4 text-gray-600" />
                   <span className="text-sm font-medium text-gray-700">{user.username}</span>
                 </div>
-                
+
                 {user.userid && (
                   <Button
                     onClick={handleShowHistory}
@@ -205,7 +204,7 @@ const MainContent: React.FC<MainContentProps> = ({ onBackToLanding, user, onLogo
                     History
                   </Button>
                 )}
-                
+
                 <Button
                   onClick={handleLogout}
                   variant="ghost"
@@ -284,26 +283,26 @@ const MainContent: React.FC<MainContentProps> = ({ onBackToLanding, user, onLogo
                             {videoData.duration}
                           </div>
                         </div>
-                        
+
                         {/* Video Details */}
                         <div className="flex-1">
                           <div className="text-sm text-gray-500 mb-1">
                             {new Date(item.createdAt).toLocaleDateString()} at {new Date(item.createdAt).toLocaleTimeString()}
                           </div>
-                          
+
                           <h3 className="text-lg font-semibold text-gray-800 mb-2 line-clamp-2">
                             {videoData.title}
                           </h3>
-                          
+
                           <div className="text-sm text-pink-600 font-medium mb-2">
                             {videoData.channelName}
                           </div>
-                          
+
                           <div className="flex items-center gap-4 text-xs text-gray-500 mb-2">
                             <span>{videoData.views} views</span>
                             <span>{videoData.publishedAt}</span>
                           </div>
-                          
+
                           <div className="text-gray-700">
                             <div className="text-sm font-medium mb-1">Summary Preview:</div>
                             <div className="text-sm text-gray-600 line-clamp-2">
@@ -311,7 +310,7 @@ const MainContent: React.FC<MainContentProps> = ({ onBackToLanding, user, onLogo
                             </div>
                           </div>
                         </div>
-                        
+
                         {/* Stats */}
                         <div className="flex-shrink-0 text-center">
                           <div className="text-xs text-gray-400">
@@ -330,8 +329,8 @@ const MainContent: React.FC<MainContentProps> = ({ onBackToLanding, user, onLogo
           </div>
         ) : !hasResults && !isLoading ? (
           <div className="flex flex-col items-center justify-center min-h-[70vh] space-y-8">
-            <URLInput 
-              onSubmit={handleURLSubmit} 
+            <URLInput
+              onSubmit={handleURLSubmit}
               isLoading={isLoading}
               language={language}
               onLanguageChange={setLanguage}
@@ -354,31 +353,44 @@ const MainContent: React.FC<MainContentProps> = ({ onBackToLanding, user, onLogo
                 Analyze New Video
               </Button>
             </div>
-            
+
             <VideoInfo {...videoData} />
-            
+
             <Tabs defaultValue="summary" className="w-full">
-              <TabsList className="grid w-full h-fit grid-cols-2 bg-white/70 backdrop-blur-sm border border-pink-100 rounded-2xl p-2">
-                <TabsTrigger 
-                  value="summary" 
+              <TabsList className="grid w-full h-fit grid-cols-3 bg-white/70 backdrop-blur-sm border border-pink-100 rounded-2xl p-2">
+                <TabsTrigger
+                  value="summary"
                   className="rounded-xl data-[state=active]:bg-gradient-to-r data-[state=active]:from-pink-200 data-[state=active]:to-orange-200 data-[state=active]:text-gray-800 text-lg py-3 cursor-pointer"
                 >
                   Summary
                 </TabsTrigger>
-                <TabsTrigger 
+                <TabsTrigger
                   value="flashcards"
                   className="rounded-xl data-[state=active]:bg-gradient-to-r data-[state=active]:from-pink-200 data-[state=active]:to-orange-200 data-[state=active]:text-gray-800 text-lg py-3 cursor-pointer"
                 >
                   Flashcards
                 </TabsTrigger>
+                <TabsTrigger
+                  value="study"
+                  className="rounded-xl data-[state=active]:bg-gradient-to-r data-[state=active]:from-pink-200 data-[state=active]:to-orange-200 data-[state=active]:text-gray-800 text-lg py-3 cursor-pointer"
+                >
+                  Study Mode
+                </TabsTrigger>
               </TabsList>
-              
+
               <TabsContent value="summary" className="mt-6">
                 <SummaryTab summary={videoData.summary} tldr={videoData.tldr} />
               </TabsContent>
-              
+
               <TabsContent value="flashcards" className="mt-6">
                 <FlashcardsTab flashcards={videoData.flashcards} />
+              </TabsContent>
+
+              <TabsContent value="study" className="mt-6">
+                <StudyTab 
+                  url={videoData.url}
+                  notes={videoData.notes}
+                />
               </TabsContent>
             </Tabs>
           </div>

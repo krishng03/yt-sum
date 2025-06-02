@@ -7,6 +7,7 @@ export interface IVideoData {
   views: string;
   publishedAt: string;
   channelName: string;
+  notes?: string;
 }
 
 export interface ISummary extends Document {
@@ -27,7 +28,8 @@ const VideoDataSchema = new Schema({
   duration: { type: String, required: true },
   views: { type: String, required: true },
   publishedAt: { type: String, required: true },
-  channelName: { type: String, required: true }
+  channelName: { type: String, required: true },
+  notes: { type: String, default: '' } // User notes for this video
 }, { _id: false });
 
 const SummarySchema: Schema = new Schema({

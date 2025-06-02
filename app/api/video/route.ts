@@ -136,7 +136,9 @@ export async function POST(request: Request) {
             duration: formatDuration(video.contentDetails?.duration || ''),
             views: formatViews(video.statistics?.viewCount || '0'),
             publishedAt: formatPublishedAt(video.snippet?.publishedAt || ''),
-            channelName: video.snippet?.channelTitle || ''
+            channelName: video.snippet?.channelTitle || '',
+            snapshots: [],
+            notes: ''
           };
 
           const summaryPayload = {
@@ -178,7 +180,8 @@ export async function POST(request: Request) {
         flashcards: aiResponse.flashcards,
         tldr: aiResponse.tldr,
         savedToDB: savedToDB,
-        isUserLoggedIn: !!currentUser && !!currentUser.userid
+        isUserLoggedIn: !!currentUser && !!currentUser.userid,
+        snapshots: []
       };
 
       return NextResponse.json(videoInfo);
