@@ -58,6 +58,28 @@ function formatPublishedAt(publishedAt: string): string {
   if (diffDays < 365) return `${Math.floor(diffDays / 30)} months ago`;
   return `${Math.floor(diffDays / 365)} years ago`;
 }
+
+// Transcript Helper Function (Using Flask API)
+async function fetchTranscript(videoId: string): Promise<string> {
+  try {
+    const flaskUrl = `http://localhost:5000/transcript?video_id=${videoId}`;
+    const response = await fetch(flaskUrl);
+    
+    if (!response.ok) {
+      console.error(`Flask API responded with status: ${response.status}`);
+      return '';
+    }
+    
+    const data = await response.json();
+    
+    console.log('Processed Transcript: ', data.cleaned_transcript);
+
+    return data.cleaned_transcript || data.transcript || '';
+  } catch (error) {
+    console.error('Error fetching transcript from Flask API:', error);
+    return '';
+  }
+}
 // --------------- DO NOT TOUCH ---------------
 
 export async function POST(request: Request) {
@@ -93,6 +115,12 @@ export async function POST(request: Request) {
         return NextResponse.json({ error: 'Video not found' }, { status: 404 });
       }
 
+      // Updated transcript handling
+      const transcript = await fetchTranscript(videoId);
+      if (!transcript) {
+        console.log('No transcript available for this video');
+      }
+
       // Generate summary and flashcards using Gemini
       const model = genAI.getGenerativeModel({ model: "gemini-1.5-flash" });
 
@@ -100,6 +128,7 @@ export async function POST(request: Request) {
         Based on this YouTube video:
         Title: ${video.snippet?.title}
         Description: ${video.snippet?.description}
+        ${transcript ? `Transcript: ${transcript.slice(0, 2000)}` : ''}
         
         Generate the response in ${language} language.
         
